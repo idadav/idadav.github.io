@@ -23,7 +23,7 @@ host_listings_count
 reviews_per_month
 reviews_score_rating
 
-```{r - Load necessary libraries}
+```
 library(tidyverse)
 library(broom)
 library(gridExtra)
@@ -40,7 +40,7 @@ library(caret)
 
 import dataset, get a first overview of the dataset and removing unnecessary columns
 
-```{r - Import, Read and Clean Data}
+```
 airbnb = read.csv("listings.csv")
 
 glimpse(airbnb)
@@ -84,7 +84,7 @@ airbnb$square_feet = NULL
 
 Removing dollar sign so that I can work with the data
 
-```{r - Clean data_2}
+```
 airbnb$price = as.numeric(gsub("\\$", "", airbnb$price))
 airbnb$weekly_price = as.numeric(gsub("\\$", "", airbnb$weekly_price))
 airbnb$monthly_price = as.numeric(gsub("\\$", "", airbnb$monthly_price))
@@ -100,7 +100,7 @@ airbnb$extra_people = as.numeric(gsub("\\$", "", airbnb$extra_people))
 
 Creating a map to visualies room types in Madrid, and mapping location and room_type with whole dataset
 
-```{r - Map visualization on whole dataset}
+```
 map = get_map(location ='Madrid', zoom = 13)
 
 ggmap(map) + 
@@ -111,7 +111,7 @@ ggmap(map) +
 As we can see there are too many points, we can not see groups or different areas. That's why I am going to take a random sample of 5% for a clearer visualtisation. 
 
 
-```{r - Map visualization on Sample data}
+```
 airbnb_random5 = airbnb %>%
   sample_frac(0.05, replace = TRUE)
 
@@ -124,7 +124,7 @@ In central madrid it's more whole apartments and in the suburbs people are renti
 
 I will rank the neighbourhoods by mean price but we will also check the median value and the normality of the prices.
 
-```{r - Summary stats on price ~ neighbourhood}
+```
 avg_p = airbnb %>%
   group_by(neighbourhood) %>%
   summarise(avg_price = mean(price, na.rm = TRUE))
@@ -148,7 +148,7 @@ median_p[order(median_p$median_price, decreasing = TRUE), c(1,2)]
 In terms of mean, Recoletos, Castellana and Chameberi are the most expensive neighbourhoods. The same holds for median, except that Chamberi falls and Jeronimos takes place 3. This tells us that although Chamberi is expensive on average, Chamberi probably also houses a lot of cheap rooms for rent.
 
 
-```{r - Check normality of Price}
+```
 /* plotting price levels */
 ggplot(data=airbnb, aes(x=price)) + 
   geom_histogram(aes(colour=I("black")), binwidth=10) +
@@ -162,7 +162,7 @@ Right tail, this is due to a great amount of houses available in Madrid. We can 
 I used the random sample cause the sample must be between 3 and 5000. A we can see we reject normality.
 
 Lets then look at room_type vs price
-```{r - Price~Room_type}
+```
 /* plotting price depending on room type */
 ggplot(data=airbnb, aes(x=price)) + 
   geom_histogram(aes(colour=I("grey"), fill = room_type), binwidth = 40, position =   "Dodge") + 
@@ -180,7 +180,7 @@ H_a: & \text{ at least two means are different}
 \end{eqnarray*} \right.
 $$
 
-```{r - ANOVA on Price~Room_type }
+```
 /* ANOVA test to check if averages in price are different */
 aov1 = aov(data=airbnb, price ~ room_type)
 summary(aov1)
@@ -212,7 +212,7 @@ Conclusion: I can reject the null hypothesis that the average price per room typ
 # QUESTION 2: Are you more likely to be a super_host if you have a lower price?
 
 Before conducting any analysis, we'll take a look at the distribution of Price with a very heavy right tail to see the impact of removing the outliers (the small number of high-value listings)
-```{r - Outlier test for Price & Removing extra factor in superhost}
+```
 /* Identify NA values and cleaning them */
 summary(airbnb$host_is_superhost)
 
@@ -273,7 +273,7 @@ While removing the outlying variables does present a much more visually pleasing
 
 What does the price and number of reviews look like when compared with a super_host status? 
 
-```{r - Visualizing price/no_of_reviews~superhost}
+```
 
 /* Standardize price and no_of reviews before graphing */
 zprice = scale(airbnb_sh$price)
@@ -306,7 +306,7 @@ ggplot(data=airbnb_sh) +
   theme_minimal()
 ```
 
-```{r - t-test on price/number of reviews/review scores rating ~ Superhost}
+```
 
 t.test(airbnb_sh$price[airbnb_sh$host_is_superhost=='t'], airbnb_sh$price[airbnb_sh$host_is_superhost=='f'], alternative = "greater")
 
@@ -320,7 +320,7 @@ With all 3 t-tests, the p-value is much lower than the alpha value of 0.05 which
 
 # QUESTION 3: does the amount of houses a host has listed impact reviews and price?
 
-```{r - Summary stats and Scaling}
+```
 /* First overlook of average and median values for the variables that we will be using */
 airbnb %>%
   summarise(
@@ -372,7 +372,7 @@ H_a: & \text{ at least two means are different}
 \end{eqnarray*} \right.
 $$
 
-```{r - ANOVA on Price~Level}
+```
 /* anova test for price */
 price_a = aov(data=airbnb_hosts, price ~ level)
 summary(price_a)
@@ -395,7 +395,7 @@ H_a: & \text{ at least two means are different}
 \end{eqnarray*} \right.
 $$
 
-```{r - ANOVA review_scores~Level}
+```
 /* anova test for review ratings */
 rating_a = aov(data=airbnb_hosts, review_scores_rating ~ level)
 summary(rating_a)
@@ -411,7 +411,7 @@ Conclusion: since p-value is less than alpha, so we REJECT H0. There is enough e
 
 Assessing normality:
 
-```{r - Assessing normality of Price,Ratings}
+```
 /* normality for price */
 ggplot(data=airbnb_hosts, aes(sample=scale(price))) + stat_qq() + facet_wrap(~ level, nrow=3) + geom_abline(intercept=0, slope=1)
 
@@ -427,7 +427,7 @@ Overall conclusion of amount of houses owned is that there are differences in pr
 
 Important to keep in mind for this part is that according to the description of the dataset, amount of reviews account for circa 70% of all bookings. So by using amount of reviews, we can ~ estimate number of bookings.
 
-```{r - Visualization of variables}
+```
 /* Lets first visualise the variables we will use */
 rpm = ggplot(data=airbnb, aes(x=reviews_per_month)) +
   geom_histogram(aes(colour=I("black")), binwidth = 1) +
@@ -460,7 +460,7 @@ sample_deposit %>%
 
 I can see that there are no flats without cleaning fee or depoosit which means the NA are 0.
 
-```{r}
+```
 /* so now we turn the Na into 0 to work better with the data */
 cleaning = airbnb %>%
   mutate(cleaning = ifelse(is.na(cleaning_fee), 0, cleaning_fee)) %>%
@@ -509,7 +509,7 @@ From what I can see in the plots, it looks like the higher the cleaning fees and
 
 Finally, I run a linear regression to see if we can predict price, and which variables we can use.
 
-```{r - Linear regression on Price}
+```
 
 /* create dataset with variables we want to check: */
 airbnb_lm = airbnb_sh %>%
